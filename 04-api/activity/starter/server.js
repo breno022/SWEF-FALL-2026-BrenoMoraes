@@ -44,31 +44,42 @@ app.get("/books/:id", (req, res) => {
 // ---------------------------------------------------------------------------
 
 app.post("/books", (req, res) => {
+  // TODO: title/author from req.body; 400 if missing; push; 201
   const { title, author } = req.body;
 
-  if (!title || !author){
-    return res.status(404).json({error: "title/author not found"})
+  if (!author || !title) {
+    return res.status(400).json({ error: "Title and author are required" });
   }
-  const book = { id: nextId++, title, author, read: false };
+  const book = { id: nextId++, title, author, read: false};
   books.push(book);
   res.status(201).json(book);
+  
 });
 
 app.put("/books/:id", (req, res) => {
-  const bookId = Number(req.params.id);
-  const book = books.find((b) => b.id === bookId);
-
-  if (!book) {
-    return res.status(404).json({ error: "Book not found" });
+  const book = books.find((b) => b.id === Number(req.params.id));
+  if (!book){
+    return res.status(404).json({ error: "Book not found"});
   }
-
-  Object.assign(book, req.body);
-  res.status(200).json(book);
+  if (req.body.title !== undefined) {
+    book.title = req.body.title;
+  }
+  if (req.body.author !== undefined) {
+    book.author = req.body.author;
+  }
+  if (req.body.read !== undefined) {
+    book.read = req.body.read;
+  }
+  res.json(book);
 });
 
 app.delete("/books/:id", (req, res) => {
-  // TODO: findIndex by id; 404 if missing; splice; 200 { deleted }
-  res.status(501).json({ error: "DELETE /books/:id not implemented yet" });
+  const index = books.findIndex((b) => b.id === Number(req.params.id))
+  if (index === -1 ){
+    return res.status(404).json({ error: "Book not found" })
+  }
+  const [deleted] = books.splice(index, 1);
+  res.json(deleted);
 });
 
 app.listen(PORT, () => {
